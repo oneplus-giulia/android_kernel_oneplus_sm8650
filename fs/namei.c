@@ -4018,14 +4018,8 @@ static int do_mknodat(int dfd, struct filename *name, umode_t mode,
 	struct path path;
 	int error;
 	unsigned int lookup_flags = 0;
-	struct filename* fname;
-	int status;
 
-	fname = getname_safe(filename);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(name)) {
 		return -ENOENT;
 	}
 
@@ -4130,14 +4124,8 @@ int do_mkdirat(int dfd, struct filename *name, umode_t mode)
 	struct path path;
 	int error;
 	unsigned int lookup_flags = LOOKUP_DIRECTORY;
-	struct filename* fname;
-	int status;
 
-	fname = getname_safe(pathname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(name)) {
 		return -ENOENT;
 	}
 retry:
@@ -4238,14 +4226,8 @@ int do_rmdir(int dfd, struct filename *name)
 	struct qstr last;
 	int type;
 	unsigned int lookup_flags = 0;
-	struct filename* fname;
-	int status;
 
-	fname = getname_safe(pathname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(name)) {
 		return -ENOENT;
 	}
 retry:
@@ -4518,22 +4500,12 @@ int do_symlinkat(struct filename *from, int newdfd, struct filename *to)
 	struct dentry *dentry;
 	struct path path;
 	unsigned int lookup_flags = 0;
-	struct filename* fname;
-	int status;
 
-	fname = getname_safe(oldname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(from)) {
 		return -ENOENT;
 	}
 
-	fname = getname_safe(newname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(to)) {
 		return -ENOENT;
 	}
 
@@ -4684,22 +4656,12 @@ int do_linkat(int olddfd, struct filename *old, int newdfd,
 	struct inode *delegated_inode = NULL;
 	int how = 0;
 	int error;
-	struct filename* fname;
-	int status;
 
-	fname = getname_safe(oldname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(old)) {
 		return -ENOENT;
 	}
 
-	fname = getname_safe(newname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(new)) {
 		return -ENOENT;
 	}
 
@@ -4996,22 +4958,12 @@ int do_renameat2(int olddfd, struct filename *from, int newdfd,
 	unsigned int lookup_flags = 0, target_flags = LOOKUP_RENAME_TARGET;
 	bool should_retry = false;
 	int error = -EINVAL;
-	struct filename* fname;
-	int status;
 
-	fname = getname_safe(oldname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(from)) {
 		return -ENOENT;
 	}
 
-	fname = getname_safe(newname);
-	status = suspicious_path(fname);
-	putname_safe(fname);
-
-	if (status) {
+	if (suspicious_path(to)) {
 		return -ENOENT;
 	}
 
@@ -5033,7 +4985,7 @@ retry:
 
 	if (suspicious_path(from)) {
 		error = -ENOENT;
-		goto exit;
+		goto put_names;
 	}
 
 	error = filename_parentat(newdfd, to, lookup_flags, &new_path, &new_last,
@@ -5043,7 +4995,7 @@ retry:
 
 	if (suspicious_path(to)) {
 		error = -ENOENT;
-		goto exit;
+		goto put_names;
 	}
 
 	error = -EXDEV;
